@@ -1,0 +1,4 @@
+include:
+  - project: 'kata-go/go-autotests'
+    ref: main
+    file: '.gitlab-ci.yml'
