@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"awesomeProject/internal/entities"
+	"MyProject/internal/entities"
 	"context"
 )
 

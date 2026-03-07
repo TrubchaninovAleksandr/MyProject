@@ -1,30 +1,42 @@
 package cases
 
 import (
-	"awesomeProject/internal/entities"
+	"MyProject/internal/entities"
 	"context"
-
+	"fmt"
 )
 
 type Service struct {
 	rateClient RateClient
-	storage  Storage
+	storage    Storage
 }
 
 func NewService(rateClient RateClient, storage Storage) (*Service, error) {
+	if rateClient == nil {
+		return nil, fmt.Errorf("ошибка клиента для получения курсов ")
+	}
+	if storage == nil {
+		return nil, fmt.Errorf("ошибка хранилища")
+	}
+
 	return &Service{
 		rateClient: rateClient,
 		storage:    storage,
-	}
+	}, nil
 }
 
-type RateСlient interface {
+type RateClient interface {
 	GetCoinRates(ctx context.Context, titles []string) ([]entities.Coin, error)
 }
 
+type Storage interface {
+	GetTitles(ctx context.Context) ([]string, error)
+	StoreCoins(ctx context.Context, coins []entities.Coin) error
+	GetCoins(ctx context.Context, titles []string) ([]entities.Coin, error)
+}
 
-func (s *Service) FetchRates (ctx context.Context) error {
-	titles, err := s.Storage.GetTitles(ctx)
+func (s *Service) FetchRates(ctx context.Context) error {
+	titles, err := s.storage.GetTitles(ctx)
 	if err != nil {
 		return err
 	}
@@ -33,7 +45,7 @@ func (s *Service) FetchRates (ctx context.Context) error {
 		return nil
 	}
 
-	coins, err := s.rateClient.FetchRates(ctx, titles)
+	coins, err := s.rateClient.GetCoinRates(ctx, titles)
 	if err != nil {
 		return err
 	}
@@ -42,37 +54,80 @@ func (s *Service) FetchRates (ctx context.Context) error {
 		return nil
 	}
 
-	if err := s.Storage.StoreCoins(ctx, coins); err != nil {
+	if err := s.storage.StoreCoins(ctx, coins); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func checkTitles (ctx context.Context, titles []string) (_, error) {
-
+func checkTitles(ctx context.Context, titles []string) ([]string, error) {
+	return titles, nil
 }
 
 func (s *Service) GetActual(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Получить курсы валют для конкретных валют из БД
-	var result []entities.Coin
+	// Получить курсы для конкретных валют из БД
+	if len(titles) == 0 {
+		return nil, fmt.Errorf("введите валюту")
+	}
 
-	return result, nil
+	coins, err := s.storage.GetCoins(ctx, titles)
+	if err != nil {
+		return nil, err
+	}
+
+	return coins, nil
 }
 
-func (s *Service) GetMax (ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Получить курсы валют  из хранилища
-	// Вернуть курс валюты с максимальной стоимостью для конкретной валюты из хранилища
-	//Если нет в хранилище, то получить новые курсы валют от API и сохранить их в хранилище
-	return entities.Coin, nil
+func (s *Service) GetMax(ctx context.Context, titles []string) ([]entities.Coin, error) {
+	if len(titles) == 0 {
+		return nil, fmt.Errorf("введите валюту")
+	}
+
+	coins, err := s.storage.GetCoins(ctx, titles)
+	if err != nil {
+		return nil, err
+	}
+
+	// Если нет в БД — загружаем с клиента и сохраняем в БД
+	if len(coins) == 0 {
+		coins, err = s.rateClient.GetCoinRates(ctx, titles)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(coins) > 0 {
+			if err := s.storage.StoreCoins(ctx, coins); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if len(coins) == 0 {
+		return []entities.Coin{}, nil
+	}
+
+	// Находим валюту с максимальной ценой
+	maxCoin := coins[0]
+	for _, coin := range coins[1:] {
+		if coin.Rate > maxCoin.Rate {
+			maxCoin = coin
+		}
+	}
+
+	return []entities.Coin{maxCoin}, nil
+
 }
 
 func (s *Service) GetMin(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Получить курсы валют  из хранилища
+	// Получить курсы валют из хранилища
 	// Вернуть курс валюты с минимальной стоимостью для конкретных валют из хранилища
 	//Если нет в хранилище, то получить новые курсы валют от API и сохранить их в хранилище
-	return entities.Coin, nil
+	return []entities.Coin{}, nil
 }
 
-func (s *Service) GetAvg (ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Получить курсы валют  из хранилища
+func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin, error) {
+	// Получить курсы валют из хранилища
 	// Вернуть курсы валют для конкретных валют из хранилища, и показать изменение их за последний час в процентах
+	return []entities.Coin{}, nil
+}
