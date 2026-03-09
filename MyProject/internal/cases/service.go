@@ -62,7 +62,7 @@ func (s *Service) FetchRates(ctx context.Context) error {
 }
 
 func (s *Service) GetActual(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Получить курсы для конкретных валют из БД
+
 	if len(titles) == 0 {
 		return nil, fmt.Errorf("введите валюту")
 	}
@@ -75,26 +75,23 @@ func (s *Service) GetActual(ctx context.Context, titles []string) ([]entities.Co
 	return coins, nil
 }
 
-// getCoinsWithFallback получает монеты из БД, а если их нет — загружает из API и сохраняет
+// getLoadCoins получает монеты из БД, а если их нет — загружает из API и сохраняет
 func (s *Service) getLoadCoins(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Попытка получить из БД
+
 	coins, err := s.storage.GetCoins(ctx, titles)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения данных из хранилища: %w", err)
 	}
 
-	// Если есть в БД — возвращаем
 	if len(coins) > 0 {
 		return coins, nil
 	}
 
-	// Если нет в БД — загружаем из API
 	coins, err = s.rateClient.GetCoinRates(ctx, titles)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения данных от API: %w", err)
 	}
 
-	// Сохраняем в БД для следующих запросов
 	if len(coins) > 0 {
 		if err := s.storage.StoreCoins(ctx, coins); err != nil {
 			return nil, fmt.Errorf("ошибка сохранения данных в хранилище: %w", err)
@@ -115,12 +112,10 @@ func (s *Service) GetMax(ctx context.Context, titles []string) ([]entities.Coin,
 		return nil, err
 	}
 
-	// Если монет нет — возвращаем пустой результат
 	if len(coins) == 0 {
 		return []entities.Coin{}, nil
 	}
 
-	// Находим монету с максимальным курсом
 	maxCoin := coins[0]
 	for _, coin := range coins[1:] {
 		if coin.Rate > maxCoin.Rate {
@@ -137,18 +132,15 @@ func (s *Service) GetMin(ctx context.Context, titles []string) ([]entities.Coin,
 		return nil, fmt.Errorf("введите валюту")
 	}
 
-	// Получаем монеты (из БД или API)
 	coins, err := s.getLoadCoins(ctx, titles)
 	if err != nil {
 		return nil, err
 	}
 
-	// Если монет нет — возвращаем пустой результат
 	if len(coins) == 0 {
 		return []entities.Coin{}, nil
 	}
 
-	// Находим монету с минимальным курсом
 	minCoin := coins[0]
 	for _, coin := range coins[1:] {
 		if coin.Rate < minCoin.Rate {
