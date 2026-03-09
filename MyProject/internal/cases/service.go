@@ -156,3 +156,5 @@ func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin,
 	// Вернуть курсы валют для конкретных валют из хранилища, и показать изменение их за последний час в процентах
 	return []entities.Coin{}, nil
 }
+
+//

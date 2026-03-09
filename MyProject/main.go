@@ -39,3 +39,5 @@ func runFetch(service *cases.Service, interval time.Duration) {
 		}
 	}
 }
+
+//

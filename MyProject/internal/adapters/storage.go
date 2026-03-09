@@ -28,3 +28,5 @@ func (s *PostgresStorage) StoreCoins(ctx context.Context, coins []entities.Coin)
 func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string) ([]entities.Coin, error) {
 
 }
+
+//

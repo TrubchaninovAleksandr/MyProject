@@ -20,3 +20,5 @@ func NewCoin(title string, rate float64) (*Coin, error) {
 		Rate:  rate,
 	}, nil
 }
+
+//
