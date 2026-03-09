@@ -16,6 +16,7 @@ func NewPostgresStorage(db *sql.DB) *PostgresStorage {
 
 // получение названия монет из БД
 func (s *PostgresStorage) GetTitles(ctx context.Context) ([]string, error) {
+
 }
 
 // сохраняем монеты в БД
