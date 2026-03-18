@@ -27,6 +27,7 @@ func NewService(rateClient RateClient, storage Storage) (*Service, error) {
 
 type RateClient interface {
 	GetCoinRates(ctx context.Context, titles []string) ([]entities.Coin, error)
+	GetAvgCoinRates(ctx context.Context, titles []string) ([]entities.Coin, error)
 }
 
 type Storage interface {
@@ -67,38 +68,37 @@ func (s *Service) GetActual(ctx context.Context, titles []string) ([]entities.Co
 		return nil, fmt.Errorf("введите валюту")
 	}
 
-	coins, err := s.storage.GetCoins(ctx, titles)
-	if err != nil {
-		return nil, err
-	}
-
-	return coins, nil
-}
-
-// getLoadCoins получает монеты из БД, а если их нет — загружает из API и сохраняет
-func (s *Service) getLoadCoins(ctx context.Context, titles []string) ([]entities.Coin, error) {
-
-	coins, err := s.storage.GetCoins(ctx, titles)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка получения данных из хранилища: %w", err)
-	}
-
-	if len(coins) > 0 {
-		return coins, nil
-	}
-
-	coins, err = s.rateClient.GetCoinRates(ctx, titles)
+	coinsFromAPI, err := s.rateClient.GetCoinRates(ctx, titles)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения данных от API: %w", err)
 	}
 
-	if len(coins) > 0 {
-		if err := s.storage.StoreCoins(ctx, coins); err != nil {
-			return nil, fmt.Errorf("ошибка сохранения данных в хранилище: %w", err)
+	if len(coinsFromAPI) == 0 {
+		return []entities.Coin{}, nil
+	}
+
+	coinsFromDB, err := s.storage.GetCoins(ctx, titles)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения данных из хранилища: %w", err)
+	}
+
+	missingTitles := getMissingTitles(titles, coinsFromDB)
+	if len(missingTitles) > 0 {
+		coinsToStore := make([]entities.Coin, 0, len(coinsFromAPI))
+		for _, coin := range coinsFromAPI {
+			if containsTitle(missingTitles, coin.Title) {
+				coinsToStore = append(coinsToStore, coin)
+			}
+		}
+
+		if len(coinsToStore) > 0 {
+			if err := s.storage.StoreCoins(ctx, coinsToStore); err != nil {
+				return nil, fmt.Errorf("ошибка сохранения данных в хранилище: %w", err)
+			}
 		}
 	}
 
-	return coins, nil
+	return orderCoinsByTitles(titles, coinsFromAPI), nil
 }
 
 func (s *Service) GetMax(ctx context.Context, titles []string) ([]entities.Coin, error) {
@@ -106,8 +106,7 @@ func (s *Service) GetMax(ctx context.Context, titles []string) ([]entities.Coin,
 		return nil, fmt.Errorf("введите валюту")
 	}
 
-	// Получаем монеты (из БД или API)
-	coins, err := s.getLoadCoins(ctx, titles)
+	coins, err := s.loadCoins(ctx, titles)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +131,7 @@ func (s *Service) GetMin(ctx context.Context, titles []string) ([]entities.Coin,
 		return nil, fmt.Errorf("введите валюту")
 	}
 
-	coins, err := s.getLoadCoins(ctx, titles)
+	coins, err := s.loadCoins(ctx, titles)
 	if err != nil {
 		return nil, err
 	}
@@ -152,9 +151,91 @@ func (s *Service) GetMin(ctx context.Context, titles []string) ([]entities.Coin,
 }
 
 func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Получить курсы валют из хранилища
-	// Вернуть курсы валют для конкретных валют из хранилища, и показать изменение их за последний час в процентах
-	return []entities.Coin{}, nil
+	if len(titles) == 0 {
+		return nil, fmt.Errorf("введите валюту")
+	}
+
+	coins, err := s.rateClient.GetAvgCoinRates(ctx, titles)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения средних данных от API: %w", err)
+	}
+
+	if len(coins) == 0 {
+		return []entities.Coin{}, nil
+	}
+
+	return orderCoinsByTitles(titles, coins), nil
 }
 
-//
+// loadCoins получаем монеты из БД, догружаем недостающие из API и сохраняем их в БД.
+func (s *Service) loadCoins(ctx context.Context, titles []string) ([]entities.Coin, error) {
+	coinsFromDB, err := s.storage.GetCoins(ctx, titles)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения данных из хранилища: %w", err)
+	}
+
+	missingTitles := getMissingTitles(titles, coinsFromDB)
+	if len(missingTitles) == 0 {
+		return coinsFromDB, nil
+	}
+
+	coinsFromAPI, err := s.rateClient.GetCoinRates(ctx, missingTitles)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения данных от API: %w", err)
+	}
+
+	if len(coinsFromAPI) > 0 {
+		if err := s.storage.StoreCoins(ctx, coinsFromAPI); err != nil {
+			return nil, fmt.Errorf("ошибка сохранения данных в хранилище: %w", err)
+		}
+	}
+
+	return append(coinsFromDB, coinsFromAPI...), nil
+}
+
+// getMissingTitles возвращает titles, которых нет в уже найденных монетах.
+func getMissingTitles(titles []string, coins []entities.Coin) []string {
+	missing := make([]string, 0)
+
+	for _, title := range titles {
+		found := false
+		for _, coin := range coins {
+			if coin.Title == title {
+				found = true
+				break
+			}
+		}
+
+		if !found && !containsTitle(missing, title) {
+			missing = append(missing, title)
+		}
+	}
+
+	return missing
+}
+
+func containsTitle(titles []string, title string) bool {
+	for _, current := range titles {
+		if current == title {
+			return true
+		}
+	}
+
+	return false
+}
+
+// orderCoinsByTitles возвращает монеты в порядке входного titles.
+func orderCoinsByTitles(titles []string, coins []entities.Coin) []entities.Coin {
+	ordered := make([]entities.Coin, 0, len(titles))
+
+	for _, title := range titles {
+		for _, coin := range coins {
+			if coin.Title == title {
+				ordered = append(ordered, coin)
+				break
+			}
+		}
+	}
+
+	return ordered
+}

@@ -15,4 +15,6 @@ func (c Client) GetCoinRates(ctx context.Context, titles []string) ([]entities.C
 	return nil, nil
 }
 
-//
+func (c Client) GetAvgCoinRates(ctx context.Context, titles []string) ([]entities.Coin, error) {
+	return nil, nil
+}
