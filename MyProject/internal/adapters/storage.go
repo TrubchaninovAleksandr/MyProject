@@ -15,6 +15,8 @@ func NewPostgresStorage(db *sql.DB) *PostgresStorage {
 }
 
 func (s *PostgresStorage) GetTitles(ctx context.Context) ([]string, error) {
+
+	return []string{}, nil
 }
 
 func (s *PostgresStorage) StoreCoins(ctx context.Context, coins []entities.Coin) error {
@@ -23,4 +25,11 @@ func (s *PostgresStorage) StoreCoins(ctx context.Context, coins []entities.Coin)
 }
 
 func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string) ([]entities.Coin, error) {
+
+	return []entities.Coin{}, nil
+}
+
+func (s *PostgresStorage) GetAvgCoinsLastHour(ctx context.Context, titles []string) ([]entities.Coin, error) {
+	// TODO: реализовать средний за последний час в БД
+	return []entities.Coin{}, nil
 }

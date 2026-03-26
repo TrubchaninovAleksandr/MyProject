@@ -4,12 +4,15 @@ import (
 	"MyProject/internal/adapters"
 	"MyProject/internal/cases"
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
 )
 
 func main() {
+
+	var db *sql.DB
 	storage := adapters.NewPostgresStorage(db)
 	client := adapters.NewClient()
 
@@ -21,14 +24,13 @@ func main() {
 
 	fmt.Printf("Сервис готов к работе: %+v\n", service)
 
-	// Запускаем фоновое обновление курсов каждые 5 минут
+	// Запускаем фоновое обновление курсов
 	runFetch(service, 5*time.Minute)
 }
 
 func runFetch(service *cases.Service, interval time.Duration) {
 	ctx := context.Background()
 
-	// Первый fetch выполняем сразу при старте
 	if err := service.FetchRates(ctx); err != nil {
 		log.Printf("FetchRates при старте завершился с ошибкой: %v", err)
 	}
