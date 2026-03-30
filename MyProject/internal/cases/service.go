@@ -1,6 +1,7 @@
 package cases
 
 import (
+	service "MyProject/internal/cases/options"
 	"MyProject/internal/cases/rateClient"
 	"MyProject/internal/cases/storage"
 	"MyProject/internal/entities"
@@ -108,59 +109,35 @@ func (s *Service) missingTitles(ctx context.Context, titles []string) error {
 	return nil
 }
 
-func (s *Service) GetMax(ctx context.Context, titles []string) ([]entities.Coin, error) {
+func (s *Service) getCoinByOption(ctx context.Context, titles []string, opt service.CoinOptions) ([]entities.Coin, error) {
 	if len(titles) == 0 {
 		return nil, fmt.Errorf("введите валюту")
 	}
-	// Убедимся, что все переданные titles присутствуют в хранилище
 	if err := s.missingTitles(ctx, titles); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ошибка обработки недостающих валют: %w", err)
 	}
-
-	// Теперь читаем все требуемые монеты из БД
 	coins, err := s.storage.GetCoins(ctx, titles)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения данных из хранилища: %w", err)
 	}
-
-	maxCoin := coins[0]
-	for _, coin := range coins[1:] {
-		if coin.Rate > maxCoin.Rate {
-			maxCoin = coin
-		}
-	}
-
-	return []entities.Coin{maxCoin}, nil
-
-}
-
-func (s *Service) GetMin(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	if len(titles) == 0 {
-		return nil, fmt.Errorf("введите валюту")
-	}
-	// Убедимся, что все переданные titles присутствуют в хранилище
-	if err := s.missingTitles(ctx, titles); err != nil {
-		return nil, err
-	}
-
-	// читаем монеты из БД
-	coins, err := s.storage.GetCoins(ctx, titles)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка получения данных из хранилища: %w", err)
-	}
-
 	if len(coins) == 0 {
 		return []entities.Coin{}, nil
 	}
-
-	minCoin := coins[0]
-	for _, coin := range coins[1:] {
-		if coin.Rate < minCoin.Rate {
-			minCoin = coin
+	best := coins[0]
+	for _, c := range coins[1:] {
+		if opt(c.Rate, best.Rate) {
+			best = c
 		}
 	}
+	return []entities.Coin{best}, nil
+}
 
-	return []entities.Coin{minCoin}, nil
+func (s *Service) GetMax(ctx context.Context, titles []string) ([]entities.Coin, error) {
+	return s.getCoinByOption(ctx, titles, service.Max())
+}
+
+func (s *Service) GetMin(ctx context.Context, titles []string) ([]entities.Coin, error) {
+	return s.getCoinByOption(ctx, titles, service.Min())
 }
 
 func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin, error) {
