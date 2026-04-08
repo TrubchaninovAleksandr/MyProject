@@ -1,7 +1,7 @@
 package cases
 
 import (
-	service "MyProject/internal/cases/options"
+	"MyProject/internal/cases/options"
 	"MyProject/internal/cases/rateClient"
 	"MyProject/internal/cases/storage"
 	"MyProject/internal/entities"
@@ -109,7 +109,7 @@ func (s *Service) missingTitles(ctx context.Context, titles []string) error {
 	return nil
 }
 
-func (s *Service) getCoinByOption(ctx context.Context, titles []string, opt service.CoinOptions) ([]entities.Coin, error) {
+func (s *Service) getCoinByOption(ctx context.Context, titles []string, opts ...options.CoinOption) ([]entities.Coin, error) {
 	if len(titles) == 0 {
 		return nil, fmt.Errorf("введите валюту")
 	}
@@ -123,9 +123,12 @@ func (s *Service) getCoinByOption(ctx context.Context, titles []string, opt serv
 	if len(coins) == 0 {
 		return []entities.Coin{}, nil
 	}
+
+	cfg := options.NewCoinConfig(opts...)
+
 	best := coins[0]
 	for _, c := range coins[1:] {
-		if opt(c.Rate, best.Rate) {
+		if cfg.Compare(c.Rate, best.Rate) {
 			best = c
 		}
 	}
@@ -133,11 +136,11 @@ func (s *Service) getCoinByOption(ctx context.Context, titles []string, opt serv
 }
 
 func (s *Service) GetMax(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	return s.getCoinByOption(ctx, titles, service.Max())
+	return s.getCoinByOption(ctx, titles, options.CoinMax())
 }
 
 func (s *Service) GetMin(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	return s.getCoinByOption(ctx, titles, service.Min())
+	return s.getCoinByOption(ctx, titles, options.CoinMin())
 }
 
 func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin, error) {
