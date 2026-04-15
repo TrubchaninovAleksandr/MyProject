@@ -24,7 +24,6 @@ func main() {
 
 	fmt.Printf("Сервис готов к работе: %+v\n", service)
 
-	// Запускаем фоновое обновление курсов
 	runFetch(service, 5*time.Minute)
 }
 

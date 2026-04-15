@@ -1,4 +1,4 @@
-package rateClient
+package cases
 
 import (
 	"MyProject/internal/entities"

@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"MyProject/internal/cases"
 	"MyProject/internal/entities"
 	"context"
 	"database/sql"
@@ -24,7 +25,7 @@ func (s *PostgresStorage) StoreCoins(ctx context.Context, coins []entities.Coin)
 	return nil
 }
 
-func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string) ([]entities.Coin, error) {
+func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string, opts ...cases.CoinOption) ([]entities.Coin, error) {
 
 	return []entities.Coin{}, nil
 }
