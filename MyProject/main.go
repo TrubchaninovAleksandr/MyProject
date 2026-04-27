@@ -4,17 +4,30 @@ import (
 	"MyProject/internal/adapters"
 	"MyProject/internal/cases"
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
 func main() {
+	ctx := context.Background()
 
-	var db *sql.DB
-	storage := adapters.NewPostgresStorage(db)
-	client := adapters.NewClient()
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL = "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
+	}
+
+	storage, err := adapters.NewPostgresStorage(ctx, dbURL)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+	defer storage.Close()
+
+	client, err := adapters.NewClient()
+	if err != nil {
+		log.Fatalf("Ошибка создания клиента: %v", err)
+	}
 
 	// Инициализация сервиса
 	service, err := cases.NewService(client, storage)
