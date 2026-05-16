@@ -132,7 +132,7 @@ func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin,
 		return nil, fmt.Errorf("ошибка обработки недостающих валют: %w", err)
 	}
 
-	coins, err := s.storage.GetAvgCoinsLastHour(ctx, titles)
+	coins, err := s.storage.GetPercent(ctx, titles)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения средних курсов из хранилища: %w", err)
 	}
@@ -140,7 +140,7 @@ func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin,
 	return coins, nil
 }
 
-func (s *Service) GetPerc(ctx context.Context, titles []string) ([]entities.Coin, error) {
+func (s *Service) GetPercent(ctx context.Context, titles []string) ([]entities.Coin, error) {
 	if len(titles) == 0 {
 		return nil, fmt.Errorf("введите валюту")
 	}
@@ -149,7 +149,7 @@ func (s *Service) GetPerc(ctx context.Context, titles []string) ([]entities.Coin
 		return nil, fmt.Errorf("ошибка обработки недостающих валют: %w", err)
 	}
 
-	coins, err := s.storage.GetCoins(ctx, titles, CoinPerc())
+	coins, err := s.storage.GetPercent(ctx, titles)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения процентного изменения из хранилища: %w", err)
 	}

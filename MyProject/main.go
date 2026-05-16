@@ -3,9 +3,11 @@ package main
 import (
 	"MyProject/internal/adapters"
 	"MyProject/internal/cases"
+	"MyProject/internal/ports"
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 )
@@ -36,6 +38,24 @@ func main() {
 	}
 
 	fmt.Printf("Сервис готов к работе: %+v\n", service)
+
+	// Инициализация HTTP роутера и запуск сервера
+	router := ports.NewUserRouter(service)
+	srv := &http.Server{Addr: ":8080", Handler: router}
+	go func() {
+		log.Printf("HTTP сервер слушает на %s", srv.Addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("ошибка HTTP сервера: %v", err)
+		}
+	}()
+
+	defer func() {
+		ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctxShutdown); err != nil {
+			log.Printf("ошибка завершения HTTP сервера: %v", err)
+		}
+	}()
 
 	runFetch(service, 5*time.Minute)
 }
