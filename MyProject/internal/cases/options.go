@@ -17,19 +17,24 @@ type CoinConfig struct {
 	Mode CoinMode
 }
 
+// CoinOption тип функции для применения опций конфигурации.
 type CoinOption func(cf *CoinConfig)
 
+// CoinMax возвращает опцию для получения максимального курса.
 func CoinMax() CoinOption {
 	return func(cf *CoinConfig) {
 		cf.Mode = Max
 	}
 }
 
+// CoinMin возвращает опцию для получения минимального курса.
 func CoinMin() CoinOption {
 	return func(cf *CoinConfig) {
 		cf.Mode = Min
 	}
 }
+
+// CoinPerc возвращает опцию для получения процента изменения курса.
 func CoinPerc() CoinOption {
 	return func(cf *CoinConfig) {
 		cf.Mode = Perc
@@ -43,6 +48,7 @@ func CoinLast() CoinOption {
 	}
 }
 
+// String возвращает строковое представление режима CoinMode.
 func (c CoinMode) String() string {
 	return [...]string{"", "Max", "Min", "Perc", "Last"}[c]
 }

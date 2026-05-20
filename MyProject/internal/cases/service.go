@@ -132,7 +132,7 @@ func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin,
 		return nil, fmt.Errorf("ошибка обработки недостающих валют: %w", err)
 	}
 
-	coins, err := s.storage.GetPercent(ctx, titles)
+	coins, err := s.storage.GetAvg(ctx, titles)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения средних курсов из хранилища: %w", err)
 	}
@@ -140,24 +140,7 @@ func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin,
 	return coins, nil
 }
 
-func (s *Service) GetPercent(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	if len(titles) == 0 {
-		return nil, fmt.Errorf("введите валюту")
-	}
-
-	if err := s.missingTitles(ctx, titles); err != nil {
-		return nil, fmt.Errorf("ошибка обработки недостающих валют: %w", err)
-	}
-
-	coins, err := s.storage.GetPercent(ctx, titles)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка получения процентного изменения из хранилища: %w", err)
-	}
-
-	return coins, nil
-}
-
-func (s *Service) GetLast(ctx context.Context, titles []string) ([]entities.Coin, error) {
+func (s *Service) GetActual(ctx context.Context, titles []string) ([]entities.Coin, error) {
 	if len(titles) == 0 {
 		return nil, fmt.Errorf("введите валюту")
 	}

@@ -198,21 +198,16 @@ func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string, opts ..
 	return result, rows.Err()
 }
 
-func (s *PostgresStorage) GetPercent(ctx context.Context, titles []string) ([]entities.Coin, error) {
-	// Процентное изменение за последний час: ((последний_курс - первый_курс) / первый_курс) * 100
-	oneHourAgo := time.Now().Add(-1 * time.Hour)
-
-	expr := `(LAST_VALUE(rate) OVER (PARTITION BY title ORDER BY creation_time ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) - FIRST_VALUE(rate) OVER (PARTITION BY title ORDER BY creation_time ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)) / NULLIF(FIRST_VALUE(rate) OVER (PARTITION BY title ORDER BY creation_time ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING), 0) * 100 AS rate`
-
+func (s *PostgresStorage) GetAvg(ctx context.Context, titles []string) ([]entities.Coin, error) {
 	query, args, err := psql.
-		Select("title", expr).
+		Select("title", "AVG(rate) AS rate").
 		From(tableCoins).
 		Where(sq.And{
 			sq.Eq{"title": titles},
-			sq.GtOrEq{"creation_time": oneHourAgo},
+			sq.GtOrEq{"creation_time": time.Now().Add(-1 * time.Hour)},
 		}).
+		GroupBy("title").
 		ToSql()
-
 	if err != nil {
 		return nil, fmt.Errorf("ошибка построения запроса: %w", err)
 	}

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 )
@@ -15,6 +14,13 @@ import (
 func main() {
 	ctx := context.Background()
 
+	// Получаем порт из переменной окружения PORT или используем 8080 по умолчанию
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	// Получаем строку подключения к БД из переменной окружения или используем локальный PostgreSQL
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		dbURL = "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
@@ -26,12 +32,13 @@ func main() {
 	}
 	defer storage.Close()
 
+	// Создаём HTTP клиент для получения курсов от внешнего API
 	client, err := adapters.NewClient()
 	if err != nil {
 		log.Fatalf("Ошибка создания клиента: %v", err)
 	}
 
-	// Инициализация сервиса
+	// Инициализация сервиса (бизнес-логика)
 	service, err := cases.NewService(client, storage)
 	if err != nil {
 		log.Fatalf("Ошибка создания сервиса: %v", err)
@@ -39,34 +46,26 @@ func main() {
 
 	fmt.Printf("Сервис готов к работе: %+v\n", service)
 
-	// Инициализация HTTP роутера и запуск сервера
-	router := ports.NewUserRouter(service)
-	srv := &http.Server{Addr: ":8080", Handler: router}
-	go func() {
-		log.Printf("HTTP сервер слушает на %s", srv.Addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("ошибка HTTP сервера: %v", err)
-		}
-	}()
+	// Создаём HTTP сервер на указанном порту
+	server := ports.NewServer(port, service)
 
-	defer func() {
-		ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(ctxShutdown); err != nil {
-			log.Printf("ошибка завершения HTTP сервера: %v", err)
-		}
-	}()
+	// Запускаем HTTP сервер (запускается в горутине)
+	if err := server.Start(); err != nil {
+		log.Fatal(err)
+	}
 
-	runFetch(service, 5*time.Minute)
+	// Запускаем фоновую горутину для периодического обновления курсов валют
+	go runFetch(service, 5*time.Minute)
+
 }
 
+// runFetch запускает периодическое обновление курсов валют из внешнего API.
 func runFetch(service *cases.Service, interval time.Duration) {
 	ctx := context.Background()
 
 	if err := service.FetchRates(ctx); err != nil {
 		log.Printf("FetchRates при старте завершился с ошибкой: %v", err)
 	}
-
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
