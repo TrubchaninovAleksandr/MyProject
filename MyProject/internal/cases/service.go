@@ -149,7 +149,7 @@ func (s *Service) GetActual(ctx context.Context, titles []string) ([]entities.Co
 		return nil, fmt.Errorf("ошибка обработки недостающих валют: %w", err)
 	}
 
-	coins, err := s.storage.GetCoins(ctx, titles, CoinLast())
+	coins, err := s.storage.GetCoins(ctx, titles, CoinActual())
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения последних курсов из хранилища: %w", err)
 	}

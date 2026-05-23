@@ -34,15 +34,15 @@ func CoinMin() CoinOption {
 	}
 }
 
-// CoinPerc возвращает опцию для получения процента изменения курса.
-func CoinPerc() CoinOption {
+// CoinAvg возвращает опцию для получения среднего курса.
+func CoinAvg() CoinOption {
 	return func(cf *CoinConfig) {
 		cf.Mode = Perc
 	}
 }
 
-// CoinLast — опция выбора последнего самого свежего курса монеты.
-func CoinLast() CoinOption {
+// CoinActual — опция выбора последнего самого свежего курса монеты.
+func CoinActual() CoinOption {
 	return func(cf *CoinConfig) {
 		cf.Mode = Last
 	}
@@ -50,5 +50,5 @@ func CoinLast() CoinOption {
 
 // String возвращает строковое представление режима CoinMode.
 func (c CoinMode) String() string {
-	return [...]string{"", "Max", "Min", "Perc", "Last"}[c]
+	return [...]string{"", "Max", "Min", "Avg", "Actual"}[c]
 }
