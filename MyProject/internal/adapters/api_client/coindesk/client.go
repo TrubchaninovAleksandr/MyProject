@@ -1,4 +1,4 @@
-package adapters
+package coindesk
 
 import (
 	"MyProject/internal/entities"

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"MyProject/internal/adapters"
+	"MyProject/internal/adapters/api_client/coindesk"
+	"MyProject/internal/adapters/storage/postgres"
 	"MyProject/internal/cases"
 	"MyProject/internal/ports"
 	"context"
@@ -26,14 +27,14 @@ func main() {
 		dbURL = "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
 	}
 
-	storage, err := adapters.NewPostgresStorage(ctx, dbURL)
+	storage, err := postgres.NewPostgresStorage(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 	defer storage.Close()
 
 	// Создаём HTTP клиент для получения курсов от внешнего API
-	client, err := adapters.NewClient()
+	client, err := coindesk.NewClient()
 	if err != nil {
 		log.Fatalf("Ошибка создания клиента: %v", err)
 	}

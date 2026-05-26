@@ -8,8 +8,7 @@ const (
 	_ CoinMode = iota
 	Max
 	Min
-	Perc
-	Last
+	Avg
 )
 
 // CoinConfig — структура конфигурации выборки монет.
@@ -37,18 +36,11 @@ func CoinMin() CoinOption {
 // CoinAvg возвращает опцию для получения среднего курса.
 func CoinAvg() CoinOption {
 	return func(cf *CoinConfig) {
-		cf.Mode = Perc
-	}
-}
-
-// CoinActual — опция выбора последнего самого свежего курса монеты.
-func CoinActual() CoinOption {
-	return func(cf *CoinConfig) {
-		cf.Mode = Last
+		cf.Mode = Avg
 	}
 }
 
 // String возвращает строковое представление режима CoinMode.
 func (c CoinMode) String() string {
-	return [...]string{"", "Max", "Min", "Avg", "Actual"}[c]
+	return [...]string{"", "Max", "Min", "Avg"}[c]
 }

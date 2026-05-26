@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// TODO посмотреть как связать интерфейс с service (cases.storage)
 // UserPort интерфейс, описывающий контракт для получения курсов криптовалют.
 type UserPort interface {
 	GetMax(ctx context.Context, titles []string) ([]entities.Coin, error)
@@ -34,15 +35,15 @@ func NewServer(port string, up UserPort) *Server {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
+	//TODO обработка ошибки, не создался конструктор
 	return &Server{
 		router: r,
 		port:   port,
 		up:     up,
 	}
 }
-func (s *Server) Start() error {
-
+func (s *Server) StartServer() error {
+	//TODO переназвать запросы на более понятные (принципы REST API) restfull
 	s.router.Get("/coins/max", s.GetMax)
 	s.router.Get("/coins/min", s.GetMin)
 	s.router.Get("/coins/avg", s.GetAvg)
@@ -95,12 +96,14 @@ func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// TODO нужно дописать DTO, error 400, 404. обдумать 200 код
 	json.NewEncoder(w).Encode(result)
 }
 func getTitles(r *http.Request) []string {
 	titles := r.URL.Query().Get("titles")
+	//TODO error non titles
 	if titles == "" {
-		return []string{}
+		return error()
 	}
 	return strings.Split(titles, ",")
 }

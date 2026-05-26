@@ -1,4 +1,4 @@
-package adapters
+package postgres
 
 import (
 	"MyProject/internal/cases"
@@ -131,7 +131,7 @@ func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string, opts ..
 	var query string
 	var args []interface{}
 	var err error
-
+	// TODO обработать как-то Get.Actual в опциях
 	switch cfg.Mode {
 	case cases.Max:
 		query, args, err = psql.
@@ -147,14 +147,8 @@ func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string, opts ..
 			Where(sq.Eq{"title": titles}).
 			GroupBy("title").
 			ToSql()
-	case cases.Last:
-		query, args, err = psql.
-			Select("DISTINCT ON (title) title", "rate").
-			From(tableCoins).
-			Where(sq.Eq{"title": titles}).
-			OrderBy("title", "creation_time DESC").
-			ToSql()
-	case cases.Perc:
+
+	case cases.Avg:
 		// Процент изменения за последний час: ((последний_курс - первый_курс) / первый_курс) * 100
 		expr := `(LAST_VALUE(rate) OVER (PARTITION BY title ORDER BY creation_time ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) - FIRST_VALUE(rate) OVER (PARTITION BY title ORDER BY creation_time ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)) / NULLIF(FIRST_VALUE(rate) OVER (PARTITION BY title ORDER BY creation_time ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING), 0) * 100 AS rate`
 		query, args, err = psql.
