@@ -45,19 +45,19 @@ func main() {
 		log.Fatalf("Ошибка создания сервиса: %v", err)
 	}
 
-	fmt.Printf("Сервис готов к работе: %+v\n", service)
+	// Service реализует cases.UserPort — передаём его в HTTP-слой как контракт.
+	var userPort cases.UserPort = service
 
-	// Создаём HTTP сервер на указанном порту
-	server := ports.NewServer(port, service)
-
-	// Запускаем HTTP сервер (запускается в горутине)
-	if err := server.Start(); err != nil {
-		log.Fatal(err)
-	}
-
-	// Запускаем фоновую горутину для периодического обновления курсов валют
 	go runFetch(service, 5*time.Minute)
 
+	server, err := ports.NewServer(port, userPort)
+	if err != nil {
+		log.Fatalf("Ошибка создания HTTP сервера: %v", err)
+	}
+
+	if err := server.StartServer(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // runFetch запускает периодическое обновление курсов валют из внешнего API.
