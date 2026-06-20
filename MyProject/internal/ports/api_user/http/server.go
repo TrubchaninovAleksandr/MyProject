@@ -1,4 +1,4 @@
-package ports
+package http
 
 import (
 	"MyProject/pkg/dto"
@@ -22,7 +22,6 @@ type Server struct {
 	service Service      // сервис для получения данных (бизнес-логика)
 }
 
-// TODO обработать ошибки входящих данных
 // NewServer создаёт и инициализирует новый HTTP сервер.
 func NewServer(port string, service Service) (*Server, error) {
 	if port == "" {
@@ -35,6 +34,8 @@ func NewServer(port string, service Service) (*Server, error) {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.NotFound(http.NotFound)
+
 	return &Server{
 		router:  r,
 		port:    port,
@@ -43,12 +44,11 @@ func NewServer(port string, service Service) (*Server, error) {
 }
 
 func (s *Server) StartServer() error {
-	// TODO рассмотреть паттерны организации файловой системы ports
-	//TODO переназвать запросы на более понятные (принципы REST API) restfull
-	s.router.Get("/coins/max", s.GetMax)
-	s.router.Get("/coins/min", s.GetMin)
-	s.router.Get("/coins/avg", s.GetAvg)
-	s.router.Get("/coins/actual", s.GetActual)
+
+	s.router.Get("v1.0.0/coins/max", s.GetMax)
+	s.router.Get("v1.0.0/coins/min", s.GetMin)
+	s.router.Get("v1.0.0/coins/avg", s.GetAvg)
+	s.router.Get("v1.0.0/coins/actual", s.GetActual)
 
 	// Запускаем сервер
 	s.http = &http.Server{
@@ -81,8 +81,10 @@ func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-	// TODO 200 ошибка и 404
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Ошибка кодирования JSON: %v", err)
+	}
 }
 
 func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +107,10 @@ func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Ошибка кодирования JSON: %v", err)
+	}
 }
 
 func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +134,10 @@ func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Ошибка кодирования JSON: %v", err)
+	}
 }
 
 func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +159,10 @@ func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Ошибка кодирования JSON: %v", err)
+	}
 }
 func getTitles(r *http.Request) ([]string, error) {
 	titles := r.URL.Query().Get("titles")

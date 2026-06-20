@@ -4,9 +4,8 @@ import (
 	"MyProject/internal/adapters/api_client/coindesk"
 	"MyProject/internal/adapters/storage/postgres"
 	"MyProject/internal/cases"
-	"MyProject/internal/ports"
+	"MyProject/internal/ports/api_user/http"
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -50,7 +49,7 @@ func main() {
 
 	go runFetch(service, 5*time.Minute)
 
-	server, err := ports.NewServer(port, userPort)
+	server, err := http.NewServer(port, userPort)
 	if err != nil {
 		log.Fatalf("Ошибка создания HTTP сервера: %v", err)
 	}

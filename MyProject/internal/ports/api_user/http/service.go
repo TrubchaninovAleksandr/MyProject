@@ -1,4 +1,4 @@
-package ports
+package http
 
 import (
 	"MyProject/internal/entities"

@@ -131,7 +131,7 @@ func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string, opts ..
 	var query string
 	var args []interface{}
 	var err error
-	// TODO обработать как-то Get.Actual в опциях
+
 	switch cfg.Mode {
 	case cases.Max:
 		query, args, err = psql.
