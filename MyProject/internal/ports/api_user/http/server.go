@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // Server структура для хранения всех зависимостей HTTP сервера.
@@ -32,9 +32,9 @@ func NewServer(port string, service Service) (*Server, error) {
 	}
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.NotFound(http.NotFound)
+
+	// Swagger UI
+	r.Handle("/swagger/*", httpSwagger.WrapHandler)
 
 	return &Server{
 		router:  r,
@@ -44,11 +44,10 @@ func NewServer(port string, service Service) (*Server, error) {
 }
 
 func (s *Server) StartServer() error {
-
-	s.router.Get("v1.0.0/coins/max", s.GetMax)
-	s.router.Get("v1.0.0/coins/min", s.GetMin)
-	s.router.Get("v1.0.0/coins/avg", s.GetAvg)
-	s.router.Get("v1.0.0/coins/actual", s.GetActual)
+	s.router.Get("/v1/coins/get_max/{titles}", s.GetMax)
+	s.router.Get("/v1/coins/get_min/{titles}", s.GetMin)
+	s.router.Get("/v1/coins/get_avg/{titles}", s.GetAvg)
+	s.router.Get("/v1/coins/get_actual/{titles}", s.GetActual)
 
 	// Запускаем сервер
 	s.http = &http.Server{
@@ -68,10 +67,17 @@ func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := s.service.GetMax(r.Context(), titles)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if len(result) == 0 {
+		http.Error(w, "No coins found", http.StatusNotFound)
+		return
+	}
+
 	response := make(dto.CoinsDTO, len(result))
 	for i, coin := range result {
 		response[i] = dto.CoinDTO{
@@ -97,6 +103,10 @@ func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 	result, err := s.service.GetMin(r.Context(), titles)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if len(result) == 0 {
+		http.Error(w, "No coins found", http.StatusNotFound)
 		return
 	}
 	response := make(dto.CoinsDTO, len(result))
@@ -126,6 +136,10 @@ func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+	if len(result) == 0 {
+		http.Error(w, "No coins found", http.StatusNotFound)
+		return
+	}
 	response := make(dto.CoinsDTO, len(result))
 	for i, coin := range result {
 		response[i] = dto.CoinDTO{
@@ -143,12 +157,17 @@ func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
 	if err != nil {
+		// TODO обработать ошибку с неправильным запросом
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	result, err := s.service.GetActual(r.Context(), titles)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if len(result) == 0 {
+		http.Error(w, "No coins found", http.StatusNotFound)
 		return
 	}
 	response := make(dto.CoinsDTO, len(result))
@@ -168,6 +187,7 @@ func getTitles(r *http.Request) ([]string, error) {
 	titles := r.URL.Query().Get("titles")
 
 	if titles == "" {
+		// TODO пересмотреть обработку ошибки
 		return nil, errors.New("Не введена валюта")
 	}
 	return strings.Split(titles, ","), nil

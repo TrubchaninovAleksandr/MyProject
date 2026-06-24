@@ -11,6 +11,77 @@ import (
 	"time"
 )
 
+// @title           MyProject Crypto API
+// @version         1.0
+// @description     API for retrieving cryptocurrency exchange rates and statistics on average, minimum, and maximum values.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /v1
+
+// @securityDefinitions.basic  BasicAuth
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
+
+// GetMax godoc
+// @Summary      Fetch maximum currency rates
+// @Description  Returns the maximum rates for the specified currencies over all time
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with maximum rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_max/{titles} [get]
+
+// GetMin godoc
+// @Summary      Fetch minimum currency rates
+// @Description  Returns the minimum rates for the specified currencies over all time
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with minimum rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_min/{titles} [get]
+
+// GetAvg godoc
+// @Summary      Fetch average currency rates
+// @Description  Returns the average rates for the specified currencies over all time
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with average rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_avg/{titles} [get]
+
+// GetActual godoc
+// @Summary      Fetch actual currency rates
+// @Description  Returns the latest actual rates for the specified currencies
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with actual rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_actual/{titles} [get]
 func main() {
 	ctx := context.Background()
 
@@ -26,11 +97,15 @@ func main() {
 		dbURL = "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
 	}
 
-	storage, err := postgres.NewPostgresStorage(ctx, dbURL)
+	// Попытаемся подключиться к Postgres. Если подключение не удалось — завершаем программу с ошибкой.
+	var storage cases.Storage
+	pgStorage, err := postgres.NewPostgresStorage(ctx, dbURL)
 	if err != nil {
-		log.Fatalf("%v", err)
+		log.Fatalf("ошибка подключения к БД: %v", err)
 	}
-	defer storage.Close()
+	// Если подключение успешно — используем Postgres и закроем пул при выходе.
+	defer pgStorage.Close()
+	storage = pgStorage
 
 	// Создаём HTTP клиент для получения курсов от внешнего API
 	client, err := coindesk.NewClient()
@@ -44,8 +119,9 @@ func main() {
 		log.Fatalf("Ошибка создания сервиса: %v", err)
 	}
 
-	// Service реализует cases.UserPort — передаём его в HTTP-слой как контракт.
-	var userPort cases.UserPort = service
+	// Service реализует интерфейс HTTP-порта сервера — передаём его в HTTP-слой как контракт.
+
+	var userPort http.Service = service
 
 	go runFetch(service, 5*time.Minute)
 
