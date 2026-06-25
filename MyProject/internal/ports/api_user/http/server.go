@@ -4,7 +4,7 @@ import (
 	"MyProject/pkg/dto"
 	"context"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -25,10 +25,10 @@ type Server struct {
 // NewServer создаёт и инициализирует новый HTTP сервер.
 func NewServer(port string, service Service) (*Server, error) {
 	if port == "" {
-		return nil, errors.New("порт не указан")
+		return nil, fmt.Errorf("порт не указан")
 	}
 	if service == nil {
-		return nil, errors.New("сервис не указан")
+		return nil, fmt.Errorf("сервис не указан")
 	}
 
 	r := chi.NewRouter()
@@ -157,7 +157,7 @@ func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
 	if err != nil {
-		// TODO обработать ошибку с неправильным запросом
+
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -187,8 +187,8 @@ func getTitles(r *http.Request) ([]string, error) {
 	titles := r.URL.Query().Get("titles")
 
 	if titles == "" {
-		// TODO пересмотреть обработку ошибки
-		return nil, errors.New("Не введена валюта")
+
+		return nil, fmt.Errorf("Не введена валюта")
 	}
 	return strings.Split(titles, ","), nil
 }
