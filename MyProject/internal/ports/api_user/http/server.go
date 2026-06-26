@@ -59,6 +59,19 @@ func (s *Server) StartServer() error {
 	return s.http.ListenAndServe()
 }
 
+// GetMax godoc
+// @Summary      Fetch maximum currency rates
+// @Description  Returns the maximum rates for the specified currencies over all time
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with maximum rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_max/{titles} [get]
+
 func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
 	if err != nil {
@@ -93,6 +106,19 @@ func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetMin godoc
+// @Summary      Fetch minimum currency rates
+// @Description  Returns the minimum rates for the specified currencies over all time
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with minimum rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_min/{titles} [get]
+
 func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
 	if err != nil {
@@ -122,6 +148,19 @@ func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
 }
+
+// GetAvg godoc
+// @Summary      Fetch average currency rates
+// @Description  Returns the average rates for the specified currencies over all time
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with average rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_avg/{titles} [get]
 
 func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
@@ -153,6 +192,19 @@ func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
 }
+
+// GetActual godoc
+// @Summary      Fetch actual currency rates
+// @Description  Returns the latest actual rates for the specified currencies
+// @Tags         coins
+// @Accept       json
+// @Produce      json
+// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Success      200 {array} dto.CoinDTO "Successful response with actual rates"
+// @Failure      400 {string} string "Invalid request (missing titles parameter)"
+// @Failure      404 {string} string "No coins found"
+// @Failure      500 {string} string "Internal server error"
+// @Router       /coins/get_actual/{titles} [get]
 
 func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
