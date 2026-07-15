@@ -1,7 +1,6 @@
 package application
 
 import (
-	"MyProject/deploy/config"
 	"MyProject/internal/adapters/api_client/coindesk"
 	"MyProject/internal/adapters/storage/postgres"
 	"MyProject/internal/cases"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-type App struct{ cfg *config.Config }
+type App struct{}
 
 func NewApp() *App {
 	return &App{}
