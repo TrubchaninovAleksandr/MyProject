@@ -35,19 +35,6 @@ func (s *PostgresStorage) Close() {
 	s.pool.Close()
 }
 
-// Query → открыть курсор
-
-//rows.Next() → получить строку
-
-//rows.Scan() → записать в переменную
-
-//append → добавить в срез
-
-//rows.Next() = false → выход из цикла
-
-//rows.Err() → проверить ошибки внутри цикла
-
-// rows.Close() → освободить соединение (через defer)
 func (s *PostgresStorage) GetTitles(ctx context.Context) ([]string, error) {
 	query, args, err := psql.
 		Select("title").

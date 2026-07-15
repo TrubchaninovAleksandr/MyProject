@@ -24,18 +24,14 @@ type Client struct {
 	convert    string
 }
 
-func NewClient() (*Client, error) {
-	client := &Client{
+func NewClient(baseURL string, timeoutSeconds int, currency string) (*Client, error) {
+	timeout := time.Duration(timeoutSeconds) * time.Second
+
+	return &Client{
 		httpClient: &http.Client{Timeout: timeout},
 		baseURL:    baseURL,
 		convert:    currency,
-	}
-
-	if client.httpClient == nil {
-		return nil, fmt.Errorf("ошибка создания HTTP клиента")
-	}
-
-	return client, nil
+	}, nil
 }
 
 // GET /data/price?fsym=BTC&tsyms=USD

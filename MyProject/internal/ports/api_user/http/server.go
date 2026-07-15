@@ -230,10 +230,11 @@ func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
+	w.WriteHeader(http.StatusOK)
 }
 func getTitles(r *http.Request) ([]string, error) {
 	titles := r.URL.Query().Get("titles")

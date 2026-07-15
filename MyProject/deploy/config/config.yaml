@@ -1,0 +1,10 @@
+port: 8080
+url: "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
+max_connections: 10
+min_connections: 2
+external_api_coindesk_base_url: "https://min-api.cryptocompare.com"
+external_api_coindesk_timeout: 10s
+external_api_coindesk_currency: "USD"
+update_interval: 5m
+log_level: "info"
+log_format: "text"

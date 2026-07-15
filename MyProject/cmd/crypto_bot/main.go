@@ -1,7 +1,7 @@
 package main
 
 import (
-	app "MyProject/application"
+	"MyProject/internal/application"
 )
 
 // @title           MyProject Crypto API
@@ -17,6 +17,6 @@ import (
 // @externalDocs.url          https://swagger.io/resources/open-api/
 
 func main() {
-	application := app.NewApp()
+	application := application.NewApp()
 	application.Run()
 }

@@ -1,17 +1,17 @@
-package app
+package application
 
 import (
+	"MyProject/deploy/config"
 	"MyProject/internal/adapters/api_client/coindesk"
 	"MyProject/internal/adapters/storage/postgres"
 	"MyProject/internal/cases"
 	"MyProject/internal/ports/api_user/http"
 	"context"
 	"log"
-	"os"
 	"time"
 )
 
-type App struct{}
+type App struct{ cfg *config.Config }
 
 func NewApp() *App {
 	return &App{}
@@ -21,29 +21,32 @@ func (a *App) Run() {
 	ctx := context.Background()
 
 	// Получаем порт из переменной окружения PORT или используем 8080 по умолчанию
-	port := os.Getenv("PORT")
+	port := a.cfg.Port
 	if port == "" {
 		port = "8080"
 	}
 
 	// Получаем строку подключения к БД из переменной окружения или используем локальный PostgreSQL
-	dbURL := os.Getenv("DATABASE_URL")
+	dbURL := a.cfg.URL
 	if dbURL == "" {
 		dbURL = "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
 	}
 
-	// Попытаемся подключиться к Postgres. Если подключение не удалось — завершаем программу с ошибкой.
-	var storage cases.Storage
 	pgStorage, err := postgres.NewPostgresStorage(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("ошибка подключения к БД: %v", err)
 	}
-	// Если подключение успешно — используем Postgres и закроем пул при выходе.
-	defer pgStorage.Close()
-	storage = pgStorage
 
-	// Создаём HTTP клиент для получения курсов от внешнего API
-	client, err := coindesk.NewClient()
+	storage := cases.Storage(pgStorage)
+
+	defer pgStorage.Close()
+
+	// Создаём HTTP клиент
+	client, err := coindesk.NewClient(
+		a.cfg.ExternalAPICoindeskBaseURL,
+		a.cfg.ExternalAPICoindeskTimeout,
+		a.cfg.ExternalAPICoindeskCurrency,
+	)
 	if err != nil {
 		log.Fatalf("Ошибка создания клиента: %v", err)
 	}
@@ -54,10 +57,13 @@ func (a *App) Run() {
 		log.Fatalf("Ошибка создания сервиса: %v", err)
 	}
 
-	// Service реализует интерфейс HTTP-порта сервера — передаём его в HTTP-слой как контракт.
+	// Service реализует интерфейс HTTP-порта сервера — передаём его в HTTP-слой
 	var userPort http.Service = service
-
-	go runFetch(service, 5*time.Minute)
+	updateInterval, err := time.ParseDuration(a.cfg.UpdateInterval)
+	if err != nil {
+		log.Fatalf("Ошибка парсинга update_interval: %v", err)
+	}
+	go runFetch(service, updateInterval)
 
 	server, err := http.NewServer(port, userPort)
 	if err != nil {
@@ -67,6 +73,7 @@ func (a *App) Run() {
 	if err := server.StartServer(); err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 // runFetch запускает периодическое обновление курсов валют из внешнего API.
