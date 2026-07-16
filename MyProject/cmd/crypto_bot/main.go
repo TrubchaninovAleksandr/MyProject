@@ -1,7 +1,9 @@
 package main
 
 import (
+	"MyProject/deploy/config"
 	"MyProject/internal/application"
+	"log"
 )
 
 // @title           MyProject Crypto API
@@ -17,6 +19,11 @@ import (
 // @externalDocs.url          https://swagger.io/resources/open-api/
 
 func main() {
-	application := application.NewApp()
+	cfg, err := config.LoadConfig("config.yaml")
+	if err != nil {
+		log.Fatalf("Ошибка загрузки конфигурации: %v", err)
+	}
+
+	application := application.NewApp(cfg)
 	application.Run()
 }

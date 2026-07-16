@@ -5,6 +5,6 @@ min_connections: 2
 external_api_coindesk_base_url: "https://min-api.cryptocompare.com"
 external_api_coindesk_timeout: 10s
 external_api_coindesk_currency: "USD"
-update_interval: 5m
+update_interval: 5s
 log_level: "info"
 log_format: "text"

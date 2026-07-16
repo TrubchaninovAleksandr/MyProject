@@ -1,25 +1,32 @@
 package application
 
 import (
+	"MyProject/deploy/config"
 	"MyProject/internal/adapters/api_client/coindesk"
 	"MyProject/internal/adapters/storage/postgres"
 	"MyProject/internal/cases"
 	"MyProject/internal/ports/api_user/http"
 	"context"
 	"log"
-	"time"
+
+	"github.com/robfig/cron/v3"
 )
 
-type App struct{}
+type App struct {
+	cfg *config.Config
+}
 
-func NewApp() *App {
-	return &App{}
+func NewApp(cfg *config.Config) *App {
+	return &App{
+		cfg: cfg,
+	}
 }
 
 func (a *App) Run() {
 	ctx := context.Background()
 
 	// Получаем порт из переменной окружения PORT или используем 8080 по умолчанию
+
 	port := a.cfg.Port
 	if port == "" {
 		port = "8080"
@@ -31,14 +38,12 @@ func (a *App) Run() {
 		dbURL = "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
 	}
 
-	pgStorage, err := postgres.NewPostgresStorage(ctx, dbURL)
+	storage, err := postgres.NewPostgresStorage(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("ошибка подключения к БД: %v", err)
 	}
 
-	storage := cases.Storage(pgStorage)
-
-	defer pgStorage.Close()
+	defer storage.Close()
 
 	// Создаём HTTP клиент
 	client, err := coindesk.NewClient(
@@ -57,14 +62,10 @@ func (a *App) Run() {
 	}
 
 	// Service реализует интерфейс HTTP-порта сервера — передаём его в HTTP-слой
-	var userPort http.Service = service
-	updateInterval, err := time.ParseDuration(a.cfg.UpdateInterval)
-	if err != nil {
-		log.Fatalf("Ошибка парсинга update_interval: %v", err)
-	}
-	go runFetch(service, updateInterval)
 
-	server, err := http.NewServer(port, userPort)
+	go startCron(service, a.cfg.UpdateInterval)
+
+	server, err := http.NewServer(port, service)
 	if err != nil {
 		log.Fatalf("Ошибка создания HTTP сервера: %v", err)
 	}
@@ -76,18 +77,23 @@ func (a *App) Run() {
 }
 
 // runFetch запускает периодическое обновление курсов валют из внешнего API.
-func runFetch(service *cases.Service, interval time.Duration) {
+
+func runFetch(service *cases.Service) {
 	ctx := context.Background()
 
 	if err := service.FetchRates(ctx); err != nil {
 		log.Printf("FetchRates при старте завершился с ошибкой: %v", err)
 	}
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
+}
 
-	for range ticker.C {
-		if err := service.FetchRates(ctx); err != nil {
-			log.Printf("Ошибка фонового обновления курсов: %v", err)
-		}
-	}
+func startCron(service *cases.Service, interval string) {
+
+	c := cron.New()
+
+	c.AddFunc("@every "+interval, func() {
+		runFetch(service)
+	})
+	c.Start()
+
+	log.Println("Cron задача запущена (каждые " + interval + " секунд)")
 }

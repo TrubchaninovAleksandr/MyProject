@@ -17,30 +17,25 @@ type CoinConfig struct {
 }
 
 // CoinOption тип функции для применения опций конфигурации.
-type CoinOption func(cf *CoinConfig)
+type CoinOption func(cfg *CoinConfig)
 
 // CoinMax возвращает опцию для получения максимального курса.
 func CoinMax() CoinOption {
-	return func(cf *CoinConfig) {
-		cf.Mode = Max
+	return func(cfg *CoinConfig) {
+		cfg.Mode = Max
 	}
 }
 
 // CoinMin возвращает опцию для получения минимального курса.
 func CoinMin() CoinOption {
-	return func(cf *CoinConfig) {
-		cf.Mode = Min
+	return func(cfg *CoinConfig) {
+		cfg.Mode = Min
 	}
 }
 
 // CoinAvg возвращает опцию для получения среднего курса.
 func CoinAvg() CoinOption {
-	return func(cf *CoinConfig) {
-		cf.Mode = Avg
+	return func(cfg *CoinConfig) {
+		cfg.Mode = Avg
 	}
-}
-
-// String возвращает строковое представление режима CoinMode.
-func (c CoinMode) String() string {
-	return [...]string{"", "Max", "Min", "Avg"}[c]
 }
