@@ -1,22 +1,23 @@
-
-FROM golang:1.26.1 AS builder
+FROM golang:1.26 AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o main ./cmd/crypto_bot
 
-FROM alpine:3.20
+RUN CGO_ENABLED=0 GOOS=linux go build -o /crypto_bot ./cmd/crypto_bot
 
-WORKDIR /app
 
-RUN apk --no-cache add ca-certificates
+FROM alpine
 
-COPY --from=builder /app/main .
+RUN apk --no-cache add ca-certificates tzdata
 
-EXPOSE 8080
-CMD ["./main"]
+WORKDIR /root/
+
+COPY --from=builder /crypto_bot .
+COPY deploy/config/config.yaml ./config.yaml
+
+EXPOSE 8081
+
+CMD ["./crypto_bot"]

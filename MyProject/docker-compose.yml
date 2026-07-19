@@ -1,28 +1,32 @@
-version: '3.9'
-
 services:
-  app:
+  crypto-bot:
     build: .
-    container_name: crypto_bot
+    container_name: crypto-bot
+    restart: unless-stopped
     ports:
-      - "8080:8080"
-    env_file:
-      - .env
+      - "8081:8081"
+    volumes:
+      - ./deploy/config/config.yaml:/root/config.yaml:ro
     depends_on:
       - postgres
-    restart: unless-stopped
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
 
   postgres:
     image: postgres:16-alpine
-    container_name: postgres_db
-    env_file:
-      - .env
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations/postgres:/docker-entrypoint-initdb.d
-    restart: unless-stopped
 
 volumes:
   postgres_data:
