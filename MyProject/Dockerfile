@@ -18,6 +18,6 @@ WORKDIR /root/
 COPY --from=builder /crypto_bot .
 COPY deploy/config/config.yaml ./config.yaml
 
-EXPOSE 8081
+EXPOSE 8080
 
 CMD ["./crypto_bot"]

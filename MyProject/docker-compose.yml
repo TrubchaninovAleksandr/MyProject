@@ -4,7 +4,7 @@ services:
     container_name: crypto-bot
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "8080:8080"
     volumes:
       - ./deploy/config/config.yaml:/root/config.yaml:ro
     depends_on:
