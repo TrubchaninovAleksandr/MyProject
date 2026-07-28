@@ -34,9 +34,6 @@ func (a *App) Run() {
 
 	// Получаем строку подключения к БД из переменной окружения или используем локальный PostgreSQL
 	dbURL := a.cfg.URL
-	if dbURL == "" {
-		dbURL = "postgres://postgres:postgres@localhost:5432/myproject?sslmode=disable"
-	}
 
 	storage, err := postgres.NewPostgresStorage(ctx, dbURL)
 	if err != nil {

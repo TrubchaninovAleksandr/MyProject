@@ -1,9 +1,10 @@
 package config
 
 import (
-	"os"
+	"fmt"
+	"log"
 
-	"gopkg.in/yaml.v3"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -20,13 +21,16 @@ type Config struct {
 }
 
 func LoadConfig(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
+	viper.SetConfigFile(path)
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Printf("[ERROR] Ошибка чтения конфигурации: %v", err)
+		return nil, fmt.Errorf("ошибка чтения конфига: %w", err)
 	}
 	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, err
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Printf("[ERROR] Ошибка распаковки в структуру: %v", err)
+		return nil, fmt.Errorf("ошибка распаковки конфига: %w", err)
 	}
 	return &cfg, nil
 }

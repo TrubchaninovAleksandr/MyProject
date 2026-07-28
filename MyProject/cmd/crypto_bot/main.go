@@ -19,11 +19,13 @@ import (
 // @externalDocs.url          https://swagger.io/resources/open-api/
 
 func main() {
-	cfg, err := config.LoadConfig("config.yaml")
+	cfg, err := config.LoadConfig("./deploy/config/config.yaml")
+	log.Print(cfg)
 	if err != nil {
-		log.Fatalf("Ошибка загрузки конфигурации: %v", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	application := application.NewApp(cfg)
 	application.Run()
+
 }
