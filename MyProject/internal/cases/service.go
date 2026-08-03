@@ -4,6 +4,7 @@ import (
 	"MyProject/internal/entities"
 	"context"
 	"fmt"
+	"strings"
 )
 
 type Service struct {
@@ -52,13 +53,19 @@ func (s *Service) FetchRates(ctx context.Context) error {
 }
 
 func (s *Service) missingTitles(ctx context.Context, titles []string) error {
+
+	normalized := make([]string, len(titles))
+	for i, t := range titles {
+		normalized[i] = strings.ToUpper(t)
+	}
+
 	dbTitles, err := s.storage.GetTitles(ctx)
 	if err != nil {
 		return fmt.Errorf("ошибка получения списка валют из хранилища: %w", err)
 	}
 
 	missingTitles := make([]string, 0)
-	for _, t := range titles {
+	for _, t := range normalized {
 		found := false
 		for _, dt := range dbTitles {
 			if dt == t {
@@ -73,6 +80,10 @@ func (s *Service) missingTitles(ctx context.Context, titles []string) error {
 
 	if len(missingTitles) == 0 {
 		return nil
+	}
+
+	if err := s.storage.StoreTitles(ctx, missingTitles); err != nil {
+		return fmt.Errorf("ошибка добавления новых валют в справочник: %w", err)
 	}
 
 	coinsFromAPI, err := s.rateClient.GetCoinRates(ctx, missingTitles)

@@ -24,13 +24,15 @@ func LoadConfig(path string) (*Config, error) {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("[ERROR] Ошибка чтения конфигурации: %v", err)
-		return nil, fmt.Errorf("ошибка чтения конфига: %w", err)
+		log.Printf("Ошибка чтения конфигурации: %v", err)
+		return nil,
+			fmt.Errorf("ошибка чтения конфига: %w", err)
 	}
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {
-		log.Printf("[ERROR] Ошибка распаковки в структуру: %v", err)
-		return nil, fmt.Errorf("ошибка распаковки конфига: %w", err)
+		log.Printf("Ошибка распаковки в структуру: %v", err)
+		return nil,
+			fmt.Errorf("ошибка распаковки конфига: %w", err)
 	}
 	return &cfg, nil
 }

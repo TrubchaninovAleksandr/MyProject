@@ -59,8 +59,12 @@ func (a *App) Run() {
 	}
 
 	// Service реализует интерфейс HTTP-порта сервера — передаём его в HTTP-слой
-
-	go startCron(service, a.cfg.UpdateInterval)
+	interval := a.cfg.UpdateInterval
+	if interval == "" {
+		interval = "@every 5s"
+		log.Printf("UpdateInterval не задан, используется значение по умолчанию: %s", interval)
+	}
+	go startCron(service, interval)
 
 	server, err := http.NewServer(port, service)
 	if err != nil {
@@ -84,13 +88,14 @@ func runFetch(service *cases.Service) {
 }
 
 func startCron(service *cases.Service, interval string) {
-
+	log.Printf("Запуск cron с интервалом: %s", interval)
 	c := cron.New()
-
-	c.AddFunc("@every "+interval, func() {
+	_, err := c.AddFunc(interval, func() {
 		runFetch(service)
 	})
+	if err != nil {
+		log.Fatalf("Ошибка добавления cron-задачи: %v", err)
+	}
 	c.Start()
-
-	log.Println("Cron задача запущена (каждые " + interval + " секунд)")
+	log.Printf("Cron задача запущена с интервалом: %s", interval)
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	baseURL  = "https://min-api.cryptocompare.com"
+	baseURL  = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=USD&api_key=2466ecb1d8ac4f9ecaf1d81c8370c32ab7ee9d920ac8b395617b91fba34cfaf2"
 	timeout  = 10 * time.Second
 	currency = "USD"
 )
@@ -22,9 +23,16 @@ type Client struct {
 	httpClient *http.Client
 	baseURL    string
 	convert    string
+	apiKey     string
 }
 
 func NewClient(baseURL string, timeoutSeconds int, currency string) (*Client, error) {
+	if baseURL == "" {
+		baseURL = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=USD&api_key=2466ecb1d8ac4f9ecaf1d81c8370c32ab7ee9d920ac8b395617b91fba34cfaf2"
+	}
+	if currency == "" {
+		currency = "USD"
+	}
 	timeout := time.Duration(timeoutSeconds) * time.Second
 
 	return &Client{
@@ -44,7 +52,7 @@ func (c *Client) GetCoinRates(ctx context.Context, titles []string) ([]entities.
 	coins := make([]entities.Coin, 0, len(titles))
 
 	// GET /data/pricemulti?fsyms=BTC,ETH&tsyms=USD — один запрос для всех монет
-	u, err := url.Parse(c.baseURL + "/data/pricemulti")
+	u, err := url.Parse(baseURL + "/data/pricemulti")
 	if err != nil {
 		return nil, fmt.Errorf("ошибка парсинга URL: %w", err)
 	}
@@ -52,6 +60,8 @@ func (c *Client) GetCoinRates(ctx context.Context, titles []string) ([]entities.
 	q.Set("fsyms", strings.Join(titles, ","))
 	q.Set("tsyms", c.convert)
 	u.RawQuery = q.Encode()
+
+	log.Printf("Request URL: %s", u.String())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

@@ -10,11 +10,11 @@ require (
 
 require (
 	github.com/go-chi/chi/v5 v5.2.5
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/spf13/viper v1.21.0
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

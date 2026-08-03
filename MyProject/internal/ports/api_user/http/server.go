@@ -44,10 +44,15 @@ func NewServer(port string, service Service) (*Server, error) {
 }
 
 func (s *Server) StartServer() error {
-	s.router.Get("/v1/coins/get_max/{titles}", s.GetMax)
-	s.router.Get("/v1/coins/get_min/{titles}", s.GetMin)
-	s.router.Get("/v1/coins/get_avg/{titles}", s.GetAvg)
-	s.router.Get("/v1/coins/get_actual/{titles}", s.GetActual)
+
+	s.router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	})
+
+	s.router.Get("/v1/coins/get_max", s.GetMax)
+	s.router.Get("/v1/coins/get_min", s.GetMin)
+	s.router.Get("/v1/coins/get_avg", s.GetAvg)
+	s.router.Get("/v1/coins/get_actual", s.GetActual)
 
 	// Запускаем сервер
 	s.http = &http.Server{
@@ -70,7 +75,7 @@ func (s *Server) StartServer() error {
 // @Failure      400 {string} string "Invalid request (missing titles parameter)"
 // @Failure      404 {string} string "No coins found"
 // @Failure      500 {string} string "Internal server error"
-// @Router       /coins/get_max/{titles} [get]
+// @Router       /coins/get_max/ [get]
 
 func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
@@ -117,7 +122,7 @@ func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 // @Failure      400 {string} string "Invalid request (missing titles parameter)"
 // @Failure      404 {string} string "No coins found"
 // @Failure      500 {string} string "Internal server error"
-// @Router       /coins/get_min/{titles} [get]
+// @Router       /coins/get_min/ [get]
 
 func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
@@ -160,7 +165,7 @@ func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 // @Failure      400 {string} string "Invalid request (missing titles parameter)"
 // @Failure      404 {string} string "No coins found"
 // @Failure      500 {string} string "Internal server error"
-// @Router       /coins/get_avg/{titles} [get]
+// @Router       /coins/get_avg/ [get]
 
 func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
@@ -230,12 +235,12 @@ func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
-	w.WriteHeader(http.StatusOK)
 }
+
 func getTitles(r *http.Request) ([]string, error) {
 	titles := r.URL.Query().Get("titles")
 

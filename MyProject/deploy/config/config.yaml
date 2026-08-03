@@ -2,9 +2,9 @@ port: 8080
 url: "postgres://postgres:postgres@postgres:5432/crypto_bot?sslmode=disable"
 max_connections: 10
 min_connections: 2
-external_api_coindesk_base_url: "https://min-api.cryptocompare.com"
+external_api_coindesk_base_url: "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC&tsyms=USD&api_key=2466ecb1d8ac4f9ecaf1d81c8370c32ab7ee9d920ac8b395617b91fba34cfaf2"
 external_api_coindesk_timeout: 10
 external_api_coindesk_currency: "USD"
-update_interval: 5
+update_interval: "@every 5s"
 log_level: "info"
 log_format: "text"

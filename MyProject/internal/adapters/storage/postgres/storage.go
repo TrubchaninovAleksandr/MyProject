@@ -150,10 +150,10 @@ func (s *PostgresStorage) GetCoins(ctx context.Context, titles []string, opts ..
 
 	default:
 		query, args, err = psql.
-			Select("title", "rate").
+			Select("DISTINCT ON (title) title", "rate").
 			From(tableCoins).
 			Where(sq.Eq{"title": titles}).
-			OrderBy("creation_time DESC").
+			OrderBy("title", "creation_time DESC").
 			ToSql()
 	}
 
