@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -60,8 +59,6 @@ func (c *Client) GetCoinRates(ctx context.Context, titles []string) ([]entities.
 	q.Set("fsyms", strings.Join(titles, ","))
 	q.Set("tsyms", c.convert)
 	u.RawQuery = q.Encode()
-
-	log.Printf("Request URL: %s", u.String())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {

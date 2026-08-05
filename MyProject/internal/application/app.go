@@ -88,7 +88,7 @@ func runFetch(service *cases.Service) {
 }
 
 func startCron(service *cases.Service, interval string) {
-	log.Printf("Запуск cron с интервалом: %s", interval)
+
 	c := cron.New()
 	_, err := c.AddFunc(interval, func() {
 		runFetch(service)

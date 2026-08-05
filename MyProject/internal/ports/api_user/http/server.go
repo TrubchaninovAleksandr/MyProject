@@ -45,10 +45,6 @@ func NewServer(port string, service Service) (*Server, error) {
 
 func (s *Server) StartServer() error {
 
-	s.router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pong"))
-	})
-
 	s.router.Get("/v1/coins/get_max", s.GetMax)
 	s.router.Get("/v1/coins/get_min", s.GetMin)
 	s.router.Get("/v1/coins/get_avg", s.GetAvg)
