@@ -74,24 +74,17 @@ func (a *App) Run() {
 	if err := server.StartServer(); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
-// runFetch запускает периодическое обновление курсов валют из внешнего API.
-
-func runFetch(service *cases.Service) {
-	ctx := context.Background()
-
-	if err := service.FetchRates(ctx); err != nil {
-		log.Printf("FetchRates при старте завершился с ошибкой: %v", err)
-	}
-}
+// startCron запускает периодическое обновление курсов валют из внешнего API.
 
 func startCron(service *cases.Service, interval string) {
-
 	c := cron.New()
 	_, err := c.AddFunc(interval, func() {
-		runFetch(service)
+		ctx := context.Background()
+		if err := service.FetchRates(ctx); err != nil {
+			log.Printf("FetchRates завершился с ошибкой: %v", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("Ошибка добавления cron-задачи: %v", err)
