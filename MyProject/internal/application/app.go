@@ -8,6 +8,9 @@ import (
 	"MyProject/internal/ports/api_user/http"
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/robfig/cron/v3"
 )
@@ -71,9 +74,26 @@ func (a *App) Run() {
 		log.Fatalf("Ошибка создания HTTP сервера: %v", err)
 	}
 
-	if err := server.StartServer(); err != nil {
-		log.Fatal(err)
+	//Graceful Shutdown
+	go func() {
+		if err := server.StartServer(); err != nil {
+
+			log.Printf("Ошибка работы HTTP сервера: %v", err)
+		}
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-sigChan
+	log.Printf("Получен сигнал %v", sig)
+
+	if err := server.Stop(); err != nil {
+		log.Printf("Ошибка при остановке HTTP сервера: %v", err)
+	} else {
+		log.Println("HTTP сервер остановлен")
 	}
+	log.Println("Приложение завершено.")
 }
 
 // startCron запускает периодическое обновление курсов валют из внешнего API.

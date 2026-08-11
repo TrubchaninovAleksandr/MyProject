@@ -66,7 +66,7 @@ func (s *Server) StartServer() error {
 // @Tags         coins
 // @Accept       json
 // @Produce      json
-// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Param        titles query string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
 // @Success      200 {array} dto.CoinDTO "Successful response with maximum rates"
 // @Failure      400 {string} string "Invalid request (missing titles parameter)"
 // @Failure      404 {string} string "No coins found"
@@ -113,7 +113,7 @@ func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 // @Tags         coins
 // @Accept       json
 // @Produce      json
-// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Param        titles query string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
 // @Success      200 {array} dto.CoinDTO "Successful response with minimum rates"
 // @Failure      400 {string} string "Invalid request (missing titles parameter)"
 // @Failure      404 {string} string "No coins found"
@@ -156,7 +156,7 @@ func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 // @Tags         coins
 // @Accept       json
 // @Produce      json
-// @Param        titles path string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
+// @Param        titles query string true "List of currencies separated by commas (e.g., BTC,ETH,USD)"
 // @Success      200 {array} dto.CoinDTO "Successful response with average rates"
 // @Failure      400 {string} string "Invalid request (missing titles parameter)"
 // @Failure      404 {string} string "No coins found"
@@ -205,7 +205,7 @@ func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 // @Failure      400 {string} string "Invalid request (missing titles parameter)"
 // @Failure      404 {string} string "No coins found"
 // @Failure      500 {string} string "Internal server error"
-// @Router       /coins/get_actual/{titles} [get]
+// @Router       /coins/get_actual/ [get]
 
 func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 	titles, err := getTitles(r)
@@ -244,7 +244,12 @@ func getTitles(r *http.Request) ([]string, error) {
 
 		return nil, fmt.Errorf("Не введена валюта")
 	}
-	return strings.Split(titles, ","), nil
+
+	titlesUp := strings.Split(titles, ",")
+	for i, p := range titlesUp {
+		titlesUp[i] = strings.ToUpper(p)
+	}
+	return titlesUp, nil
 }
 
 func (s *Server) Stop() error {
