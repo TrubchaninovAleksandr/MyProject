@@ -10,5 +10,4 @@ type Storage interface {
 	StoreTitles(ctx context.Context, titles []string) error
 	StoreCoins(ctx context.Context, coins []entities.Coin) error
 	GetCoins(ctx context.Context, titles []string, opt ...CoinOption) ([]entities.Coin, error)
-	GetAvg(ctx context.Context, titles []string) ([]entities.Coin, error)
 }

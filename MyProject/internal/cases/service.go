@@ -143,7 +143,7 @@ func (s *Service) GetAvg(ctx context.Context, titles []string) ([]entities.Coin,
 		return nil, fmt.Errorf("ошибка обработки недостающих валют: %w", err)
 	}
 
-	coins, err := s.storage.GetAvg(ctx, titles)
+	coins, err := s.storage.GetCoins(ctx, titles, CoinAvg())
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения средних курсов из хранилища: %w", err)
 	}

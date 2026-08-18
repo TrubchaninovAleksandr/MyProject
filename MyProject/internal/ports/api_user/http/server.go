@@ -104,7 +104,7 @@ func (s *Server) GetMax(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
-	w.WriteHeader(http.StatusOK)
+
 }
 
 // GetMin godoc
@@ -147,7 +147,7 @@ func (s *Server) GetMin(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
-	w.WriteHeader(http.StatusOK)
+
 }
 
 // GetAvg godoc
@@ -191,7 +191,7 @@ func (s *Server) GetAvg(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
-	w.WriteHeader(http.StatusOK)
+
 }
 
 // GetActual godoc
@@ -234,7 +234,6 @@ func (s *Server) GetActual(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Ошибка кодирования JSON: %v", err)
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func getTitles(r *http.Request) ([]string, error) {
